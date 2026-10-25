@@ -236,16 +236,30 @@
     </form>
   </dialog>
 
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script>
     "use strict";
 
     const STORAGE_KEY = "ht-motor-directory-v1";
+    const SHARED_DB_PATH = "htMotorDirectory";
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+      projectId: "YOUR_PROJECT",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
     const fields = [
       "unit", "lineNo", "section", "equipmentTag", "equipmentDesc", "make", "type",
       "power", "frameSize", "statorVolt", "statorCurr", "rotorVolt", "rotorCurr",
       "rpm", "mounting", "runningOn", "sparesAvail", "remarks", "condition"
     ];
+
     const sampleMotors = [
       { unit:"Dalla", lineNo:"Line2", section:"Coal Mill", equipmentTag:"L42MD1", equipmentDesc:"Coal Mill MD", make:"BHEL", type:"Slipring", power:500, frameSize:"1LS7630", statorVolt:6600, statorCurr:64, rotorVolt:1100, rotorCurr:430, rpm:740, mounting:"Horizontal", runningOn:"Coal Mill 2A", sparesAvail:"Yes", remarks:"Stored at store", condition:"Good" },
       { unit:"Dalla", lineNo:"Line2", section:"Kiln", equipmentTag:"422FN2", equipmentDesc:"Bag House Fan", make:"BHEL", type:"Slipring", power:1200, frameSize:"1LS7806", statorVolt:6600, statorCurr:144, rotorVolt:1100, rotorCurr:760, rpm:990, mounting:"Horizontal", runningOn:"Kiln exhauster", sparesAvail:"No", remarks:"Awaiting inspection", condition:"Fair" },
@@ -263,6 +277,9 @@
     ];
 
     let motors = loadMotors();
+    let sharedDatabase = null;
+    let sharedSyncEnabled = false;
+
     const elements = {
       rows: document.getElementById("motor-rows"),
       empty: document.getElementById("empty-state"),
@@ -273,6 +290,50 @@
       form: document.getElementById("motor-form"),
       file: document.getElementById("file-input")
     };
+
+    function isFirebaseConfigured() {
+      return !!(
+        firebase &&
+        firebase.apps &&
+        firebase.apps.length > 0 &&
+        firebaseConfig &&
+        firebaseConfig.apiKey &&
+        firebaseConfig.apiKey !== "YOUR_API_KEY" &&
+        firebaseConfig.projectId &&
+        firebaseConfig.projectId !== "YOUR_PROJECT"
+      );
+    }
+
+    function initializeSharedStorage() {
+      if (!window.firebase || !isFirebaseConfigured()) {
+        sharedSyncEnabled = false;
+        return;
+      }
+
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+      }
+
+      sharedDatabase = firebase.database();
+      sharedSyncEnabled = true;
+
+      const remoteRef = sharedDatabase.ref(SHARED_DB_PATH);
+      remoteRef.on("value", (snapshot) => {
+        const remoteData = snapshot.val();
+        if (!Array.isArray(remoteData)) return;
+
+        const localSaved = localStorage.getItem(STORAGE_KEY);
+        const localData = localSaved ? JSON.parse(localSaved) : null;
+        if (Array.isArray(localData) && localData.length && localData.length !== remoteData.length) {
+          motors = localData;
+        } else {
+          motors = remoteData;
+        }
+
+        persist();
+        render();
+      });
+    }
 
     function loadMotors() {
       try {
@@ -292,6 +353,13 @@
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(motors));
         document.getElementById("saved-note").textContent = "Changes are saved in this browser";
+
+        if (sharedSyncEnabled && sharedDatabase) {
+          sharedDatabase.ref(SHARED_DB_PATH).set(motors).catch((error) => {
+            console.error("Unable to sync shared motor data:", error);
+            document.getElementById("saved-note").textContent = "Saved locally; cloud sync failed";
+          });
+        }
       } catch (error) {
         console.error("Unable to save motor data:", error);
         document.getElementById("saved-note").textContent = "Could not save changes in this browser";
@@ -554,6 +622,7 @@
       if (event.target === elements.dialog) closeForm();
     });
 
+    initializeSharedStorage();
     render();
   </script>
 </body>
