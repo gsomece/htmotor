@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#102d43">
+  <title>HT Motor Directory</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --navy: #102d43;
+      --navy-soft: #1c435b;
+      --orange: #ef7622;
+      --orange-soft: #fff1e7;
+      --paper: #f4f6f8;
+      --ink: #1c2933;
+      --muted: #647481;
+      --line: #dce3e8;
+      --green: #14734a;
+      --red: #a83333;
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .topbar { background: var(--navy); color: white; }
+    .topbar-inner, main, .footer-inner { width: min(1440px, calc(100% - 40px)); margin: 0 auto; }
+    .topbar-inner { min-height: 88px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
+    .brand-mark { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 12px; background: var(--orange); font-weight: 800; letter-spacing: .03em; }
+    h1 { margin: 0; font-size: 20px; letter-spacing: -.02em; }
+    .brand p { margin: 5px 0 0; color: #bdcbd4; font-size: 13px; }
+    .actions { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; justify-content: flex-end; }
+    .button { display: inline-flex; align-items: center; justify-content: center; min-height: 39px; padding: 9px 13px; border: 1px solid transparent; border-radius: 8px; background: white; color: var(--navy); font-weight: 650; font-size: 13px; text-decoration: none; transition: background .15s ease, transform .15s ease; }
+    .button:hover { transform: translateY(-1px); }
+    .button-primary { background: var(--orange); color: white; }
+    .button-primary:hover { background: #d95f12; }
+    .button-outline { background: transparent; border-color: #6c8392; color: white; }
+    .button-outline:hover { background: #ffffff12; }
+    .button-muted { border-color: var(--line); background: white; }
+    .button-danger { color: var(--red); border-color: #e8c7c7; background: white; }
+    main { padding: 28px 0 38px; }
+    .welcome { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+    .welcome h2 { margin: 0; color: var(--navy); font-size: 22px; }
+    .welcome p { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
+    .saved-note { color: var(--muted); font-size: 12px; }
+    .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 18px; }
+    .stat { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 17px; border: 1px solid #e5eaee; border-radius: 12px; background: white; box-shadow: 0 2px 8px #102d4309; }
+    .stat-label { color: var(--muted); font-size: 11px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+    .stat-value { margin-top: 7px; color: var(--navy); font-size: 27px; font-weight: 750; line-height: 1; }
+    .stat-icon { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 11px; background: #eef3f6; color: var(--navy-soft); font-size: 19px; }
+    .stat.available .stat-icon { background: #e8f5ee; color: var(--green); }
+    .stat.unavailable .stat-icon { background: #fbeeee; color: var(--red); }
+    .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px; border: 1px solid #e5eaee; border-radius: 12px; background: white; margin-bottom: 14px; }
+    .filters { display: flex; gap: 9px; flex: 1; }
+    .control { min-height: 40px; padding: 9px 11px; border: 1px solid #d5dee4; border-radius: 8px; background: white; color: var(--ink); outline: none; }
+    .control:focus { border-color: var(--orange); box-shadow: 0 0 0 3px #ef762226; }
+    #search { width: min(440px, 100%); }
+    #plant-filter, #availability-filter { min-width: 160px; }
+    .results { white-space: nowrap; color: var(--muted); font-size: 13px; }
+    .results strong { color: var(--ink); }
+    .table-card { overflow: hidden; border: 1px solid #e5eaee; border-radius: 12px; background: white; box-shadow: 0 2px 8px #102d4309; }
+    .table-scroll { overflow: auto; max-height: calc(100vh - 390px); min-height: 280px; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 12px; }
+    thead { position: sticky; top: 0; z-index: 1; background: var(--navy); color: white; }
+    th { padding: 12px 11px; white-space: nowrap; font-size: 10px; letter-spacing: .055em; text-transform: uppercase; }
+    td { max-width: 260px; padding: 11px; border-bottom: 1px solid #edf0f2; vertical-align: middle; }
+    tbody tr:hover { background: #fffaf6; }
+    .tag { color: var(--navy); font-weight: 750; white-space: nowrap; }
+    .unit { font-weight: 700; }
+    .badge { display: inline-block; padding: 4px 8px; border-radius: 999px; font-size: 10px; font-weight: 750; white-space: nowrap; }
+    .badge-yes { background: #e8f5ee; color: var(--green); }
+    .badge-no { background: #fbeeee; color: var(--red); }
+    .badge-unknown { background: #edf1f4; color: #5d6c76; }
+    .row-actions { display: flex; gap: 5px; }
+    .icon-button { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--navy-soft); }
+    .icon-button:hover { background: #edf2f5; }
+    .icon-button.delete { color: var(--red); }
+    .empty { padding: 42px 16px; color: var(--muted); text-align: center; }
+    footer { padding: 16px 20px; border-top: 1px solid var(--line); background: white; color: var(--muted); text-align: center; font-size: 12px; }
+    dialog { width: min(850px, calc(100% - 28px)); max-width: none; max-height: min(90vh, 850px); padding: 0; overflow: hidden; border: 0; border-radius: 14px; box-shadow: 0 22px 75px #0004; }
+    dialog::backdrop { background: #07172399; }
+    .dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 17px 21px; background: var(--navy); color: white; }
+    .dialog-head h2 { margin: 0; font-size: 17px; }
+    .close-button { width: 32px; height: 32px; border: 0; border-radius: 6px; background: #ffffff1b; color: white; font-size: 21px; }
+    .form-content { max-height: calc(90vh - 68px); overflow: auto; padding: 20px; }
+    .form-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field.wide { grid-column: span 2; }
+    .field label { color: #465660; font-size: 12px; font-weight: 700; }
+    .field input, .field select { width: 100%; min-height: 39px; padding: 9px 10px; border: 1px solid #d5dee4; border-radius: 7px; }
+    .field input:focus, .field select:focus { outline: 2px solid #ef762255; border-color: var(--orange); }
+    .form-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--line); }
+    .notice { min-height: 20px; margin: 0 0 10px; color: var(--red); font-size: 13px; }
+    #file-input { display: none; }
+    @media (max-width: 900px) {
+      .topbar-inner { align-items: flex-start; flex-direction: column; padding: 16px 0; }
+      .actions { justify-content: flex-start; }
+      .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .table-scroll { max-height: none; }
+    }
+    @media (max-width: 620px) {
+      .topbar-inner, main, .footer-inner { width: min(100% - 24px, 1440px); }
+      .welcome { align-items: flex-start; flex-direction: column; }
+      .toolbar, .filters { align-items: stretch; flex-direction: column; }
+      #search, #plant-filter, #availability-filter { width: 100%; }
+      .results { align-self: flex-end; }
+      .stats { gap: 9px; }
+      .stat { padding: 13px; }
+      .stat-label { font-size: 9px; }
+      .stat-value { font-size: 23px; }
+      .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .field.wide { grid-column: span 2; }
+    }
+    @media (max-width: 390px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .field.wide { grid-column: auto; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-mark" aria-label="HT">HT</div>
+        <div>
+          <h1>HT Motor Directory</h1>
+          <p>Critical spare motors · plant equipment register · Owner: Gopal Somani</p>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="button button-outline" id="import-button" type="button">Import Excel</button>
+        <input id="file-input" type="file" accept=".xlsx,.xls">
+        <button class="button button-outline" id="export-button" type="button">Export Excel</button>
+        <button class="button button-primary" id="add-button" type="button">＋ Add motor</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="welcome">
+      <div>
+        <h2>Motor inventory</h2>
+        <p>Search, review and manage critical high-tension motor spares across plants.</p>
+      </div>
+      <span class="saved-note" id="saved-note">Changes are saved in this browser</span>
+    </section>
+
+    <section class="stats" aria-label="Inventory summary">
+      <article class="stat">
+        <div><div class="stat-label">Total motors</div><div class="stat-value" id="stat-total">0</div></div>
+        <div class="stat-icon" aria-hidden="true">▦</div>
+      </article>
+      <article class="stat">
+        <div><div class="stat-label">Plants registered</div><div class="stat-value" id="stat-plants">0</div></div>
+        <div class="stat-icon" aria-hidden="true">⌂</div>
+      </article>
+      <article class="stat available">
+        <div><div class="stat-label">Spares available</div><div class="stat-value" id="stat-available">0</div></div>
+        <div class="stat-icon" aria-hidden="true">✓</div>
+      </article>
+      <article class="stat unavailable">
+        <div><div class="stat-label">Spares unavailable</div><div class="stat-value" id="stat-unavailable">0</div></div>
+        <div class="stat-icon" aria-hidden="true">!</div>
+      </article>
+    </section>
+
+    <section class="toolbar" aria-label="Search and filters">
+      <div class="filters">
+        <input class="control" id="search" type="search" placeholder="Search tag, description, make, remarks…" aria-label="Search motors">
+        <select class="control" id="plant-filter" aria-label="Filter by plant"><option value="">All plants</option></select>
+        <select class="control" id="availability-filter" aria-label="Filter by spare availability">
+          <option value="">All spare statuses</option>
+          <option value="Yes">Available</option>
+          <option value="No">Not available</option>
+        </select>
+      </div>
+      <div class="results">Showing <strong id="record-count">0</strong> records</div>
+    </section>
+
+    <section class="table-card" aria-label="HT motor records">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Plant</th><th>Line</th><th>Section</th><th>Equipment tag</th><th>Description</th>
+              <th>Make / type</th><th>Power</th><th>Frame size</th><th>Stator V / A</th>
+              <th>Rotor V / A</th><th>RPM</th><th>Running on</th><th>Spare</th>
+              <th>Remarks</th><th>Condition</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="motor-rows"></tbody>
+        </table>
+        <div class="empty" id="empty-state" hidden>No motors match your search. Try changing the filters or add a motor.</div>
+      </div>
+    </section>
+  </main>
+
+  <footer>HT Motor Directory · Data stays in this browser unless you export it.</footer>
+
+  <dialog id="motor-dialog">
+    <div class="dialog-head">
+      <h2 id="dialog-title">Add motor</h2>
+      <button class="close-button" type="button" id="close-dialog" aria-label="Close">×</button>
+    </div>
+    <form id="motor-form" class="form-content">
+      <p class="notice" id="form-notice" role="alert"></p>
+      <input id="motor-id" type="hidden">
+      <div class="form-grid">
+        <div class="field"><label for="unit">Plant *</label><input id="unit" name="unit" required></div>
+        <div class="field"><label for="lineNo">Line *</label><input id="lineNo" name="lineNo" required></div>
+        <div class="field"><label for="section">Section</label><input id="section" name="section"></div>
+        <div class="field"><label for="equipmentTag">Equipment tag *</label><input id="equipmentTag" name="equipmentTag" required></div>
+        <div class="field wide"><label for="equipmentDesc">Equipment description *</label><input id="equipmentDesc" name="equipmentDesc" required></div>
+        <div class="field"><label for="make">Make</label><input id="make" name="make"></div>
+        <div class="field"><label for="type">Motor type</label><select id="type" name="type"><option>Slipring</option><option>Squirrel Cage</option></select></div>
+        <div class="field"><label for="power">Power (kW)</label><input id="power" name="power" type="number" min="0" step="any"></div>
+        <div class="field"><label for="frameSize">Frame size</label><input id="frameSize" name="frameSize"></div>
+        <div class="field"><label for="statorVolt">Stator voltage (V)</label><input id="statorVolt" name="statorVolt" type="number" min="0" step="any"></div>
+        <div class="field"><label for="statorCurr">Stator current (A)</label><input id="statorCurr" name="statorCurr" type="number" min="0" step="any"></div>
+        <div class="field"><label for="rotorVolt">Rotor voltage (V)</label><input id="rotorVolt" name="rotorVolt" type="number" min="0" step="any"></div>
+        <div class="field"><label for="rotorCurr">Rotor current (A)</label><input id="rotorCurr" name="rotorCurr" type="number" min="0" step="any"></div>
+        <div class="field"><label for="rpm">Motor RPM</label><input id="rpm" name="rpm" type="number" min="0" step="any"></div>
+        <div class="field"><label for="mounting">Mounting</label><input id="mounting" name="mounting"></div>
+        <div class="field"><label for="runningOn">Running on</label><input id="runningOn" name="runningOn"></div>
+        <div class="field"><label for="sparesAvail">Spare available?</label><select id="sparesAvail" name="sparesAvail"><option value="">Unknown</option><option value="Yes">Yes</option><option value="No">No</option></select></div>
+        <div class="field wide"><label for="remarks">Remarks</label><input id="remarks" name="remarks"></div>
+        <div class="field"><label for="condition">Spare motor condition</label><input id="condition" name="condition"></div>
+      </div>
+      <div class="form-actions">
+        <button class="button button-muted" type="button" id="cancel-dialog">Cancel</button>
+        <button class="button button-primary" type="submit">Save motor</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script>
+    "use strict";
+
+    const STORAGE_KEY = "ht-motor-directory-v1";
+    const fields = [
+      "unit", "lineNo", "section", "equipmentTag", "equipmentDesc", "make", "type",
+      "power", "frameSize", "statorVolt", "statorCurr", "rotorVolt", "rotorCurr",
+      "rpm", "mounting", "runningOn", "sparesAvail", "remarks", "condition"
+    ];
+    const sampleMotors = [
+      { unit:"Dalla", lineNo:"Line2", section:"Coal Mill", equipmentTag:"L42MD1", equipmentDesc:"Coal Mill MD", make:"BHEL", type:"Slipring", power:500, frameSize:"1LS7630", statorVolt:6600, statorCurr:51.46, rotorVolt:598, rotorCurr:340, rpm:1500, mounting:"FOOT", runningOn:"GRR/LRS", sparesAvail:"Yes", remarks:"Available at site in Healthy condition", condition:"Ready" },
+      { unit:"Dalla", lineNo:"Line2", section:"Kiln", equipmentTag:"422FN2", equipmentDesc:"Bag House Fan", make:"BHEL", type:"Slipring", power:1200, frameSize:"1LS7806", statorVolt:6600, statorCurr:123.5, rotorVolt:1505, rotorCurr:485, rpm:750, mounting:"FOOT", runningOn:"GRR/SPRS", sparesAvail:"Yes", remarks:"Available at site in Healthy condition", condition:"Ready" },
+      { unit:"Dalla", lineNo:"Line2", section:"Kiln", equipmentTag:"442FN1", equipmentDesc:"PH Fan", make:"BHEL", type:"Slipring", power:2300, frameSize:"1RR7716", statorVolt:6600, statorCurr:236.71, rotorVolt:1608, rotorCurr:870, rpm:1000, mounting:"FOOT", runningOn:"GRR/SPRS", sparesAvail:"Yes", remarks:"Available @2000kW", condition:"Ready" },
+      { unit:"Dalla", lineNo:"Line1", section:"Kiln", equipmentTag:"441FN1", equipmentDesc:"PH Fan", make:"CGL", type:"Slipring", power:1950, frameSize:"560", statorVolt:6600, statorCurr:217, rotorVolt:1970, rotorCurr:585, rpm:1000, mounting:"FOOT", runningOn:"GRR/MV Drive", sparesAvail:"No", remarks:"On Order. Will deliver by Feb'2027", condition:"On Order" },
+      { unit:"Dalla", lineNo:"Line1", section:"Coal Mill", equipmentTag:"L41BM1", equipmentDesc:"Coal Mill MD", make:"BHEL", type:"Slipring", power:430, frameSize:"BW12176H6A", statorVolt:6600, statorCurr:47.5, rotorVolt:695, rotorCurr:390, rpm:987, mounting:"FOOT", runningOn:"LRS", sparesAvail:"Yes", remarks:"Available at site in Healthy condition", condition:"Ready" },
+      { unit:"Dalla", lineNo:"Line2", section:"Raw Mill", equipmentTag:"362FN1", equipmentDesc:"VRM Fan", make:"BHEL", type:"Slipring", power:3700, frameSize:"1RU7718", statorVolt:6600, statorCurr:400, rotorVolt:2050, rotorCurr:965, rpm:993, mounting:"FOOT", runningOn:"GRR/SPRS", sparesAvail:"Yes", remarks:"Available @3300kW", condition:"Ready" },
+      { unit:"Dalla", lineNo:"Line2", section:"Raw Mill", equipmentTag:"362MD1", equipmentDesc:"VRM MD", make:"BHEL", type:"Slipring", power:3300, frameSize:"1RU7718", statorVolt:6600, statorCurr:384, rotorVolt:2050, rotorCurr:965, rpm:993, mounting:"FOOT", runningOn:"LRS", sparesAvail:"Yes", remarks:"Available @3300kW", condition:"Ready" },
+      { unit:"Dalla", lineNo:"Line1", section:"Raw Mill", equipmentTag:"344MD2", equipmentDesc:"RP MD", make:"BHEL", type:"Slipring", power:1000, frameSize:"1RB756334", statorVolt:6600, statorCurr:108, rotorVolt:695, rotorCurr:875, rpm:1482, mounting:"FOOT", runningOn:"LRS", sparesAvail:"Yes", remarks:"Available at site in Healthy condition", condition:"Ready" },
+      { unit:"Dalla", lineNo:"Line1", section:"Raw Mill", equipmentTag:"344MD1", equipmentDesc:"RP MD", make:"BHEL", type:"Slipring", power:1000, frameSize:"1RB756334", statorVolt:6600, statorCurr:108, rotorVolt:695, rotorCurr:875, rpm:1482, mounting:"FOOT", runningOn:"LRS", sparesAvail:"Yes", remarks:"Available at site in Healthy condition", condition:"Ready" },
+      { unit:"Sidhi", lineNo:"Line-1", section:"Rawmill", equipmentTag:"361MD1", equipmentDesc:"Raw Mill Main Drive", make:"BHEL", type:"Slipring", power:3300, frameSize:"IRU7718-6", statorVolt:6600, statorCurr:357, rotorVolt:2050, rotorCurr:965, rpm:993, mounting:"FOOT", runningOn:"LRS", sparesAvail:"No", remarks:"Available at Dalla Plant in 3300 KW rating", condition:"Ready" },
+      { unit:"Sidhi", lineNo:"Line-1", section:"Rawmill", equipmentTag:"361 FN1", equipmentDesc:"Raw Mill Fan", make:"BHEL", type:"Slipring", power:3600, frameSize:"IRU7718-6", statorVolt:6600, statorCurr:357, rotorVolt:2050, rotorCurr:965, rpm:993, mounting:"FOOT", runningOn:"GRR/SPRS", sparesAvail:"", remarks:"", condition:"" },
+      { unit:"Sidhi", lineNo:"Line-1", section:"Coal Mill", equipmentTag:"L41MD1", equipmentDesc:"Coal Mill Main drive", make:"BHEL", type:"Slipring", power:500, frameSize:"ILS7630-4", statorVolt:6600, statorCurr:57.5, rotorVolt:893, rotorCurr:340, rpm:1464, mounting:"FOOT", runningOn:"GRR", sparesAvail:"No", remarks:"Available at Dalla Plant", condition:"Ready" },
+      { unit:"Sidhi", lineNo:"Line-1", section:"Coal Mill", equipmentTag:"L41 FN2", equipmentDesc:"Coal Mill Fan", make:"ABB", type:"Squirrel Cage", power:500, frameSize:"AMA400L6ABAFi", statorVolt:690, statorCurr:550, rotorVolt:"", rotorCurr:"", rpm:990, mounting:"FOOT", runningOn:"", sparesAvail:"Yes", remarks:"Available at site in Healthy condition", condition:"Ready" }
+    ];
+
+    let motors = loadMotors();
+    const elements = {
+      rows: document.getElementById("motor-rows"),
+      empty: document.getElementById("empty-state"),
+      search: document.getElementById("search"),
+      plant: document.getElementById("plant-filter"),
+      availability: document.getElementById("availability-filter"),
+      dialog: document.getElementById("motor-dialog"),
+      form: document.getElementById("motor-form"),
+      file: document.getElementById("file-input")
+    };
+
+    function loadMotors() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved === null) return sampleMotors;
+        const parsed = JSON.parse(saved);
+        if (!Array.isArray(parsed)) throw new Error("Saved motor data is not a list.");
+        return parsed;
+      } catch (error) {
+        console.error("Unable to load saved motor data:", error);
+        document.getElementById("saved-note").textContent = "Could not read saved data; showing sample records";
+        return sampleMotors;
+      }
+    }
+
+    function persist() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(motors));
+        document.getElementById("saved-note").textContent = "Changes are saved in this browser";
+      } catch (error) {
+        console.error("Unable to save motor data:", error);
+        document.getElementById("saved-note").textContent = "Could not save changes in this browser";
+        alert("Your browser could not save this change. Export a backup before closing the page.");
+      }
+    }
+
+    function text(value) {
+      return value === null || value === undefined ? "" : String(value);
+    }
+
+    function makeCell(row, value, className) {
+      const cell = document.createElement("td");
+      cell.textContent = text(value) || "—";
+      if (className) cell.className = className;
+      row.appendChild(cell);
+      return cell;
+    }
+
+    function render() {
+      const query = elements.search.value.trim().toLocaleLowerCase();
+      const selectedPlant = elements.plant.value;
+      const selectedAvailability = elements.availability.value;
+      const filtered = motors.filter((motor) => {
+        const matchesQuery = fields.some((field) => text(motor[field]).toLocaleLowerCase().includes(query));
+        return matchesQuery &&
+          (!selectedPlant || motor.unit === selectedPlant) &&
+          (!selectedAvailability || motor.sparesAvail === selectedAvailability);
+      });
+      elements.rows.replaceChildren();
+
+      for (const motor of filtered) {
+        const row = document.createElement("tr");
+        makeCell(row, motor.unit, "unit");
+        makeCell(row, motor.lineNo);
+        makeCell(row, motor.section);
+        makeCell(row, motor.equipmentTag, "tag");
+        makeCell(row, motor.equipmentDesc);
+        makeCell(row, [motor.make, motor.type].filter(Boolean).join(" · "));
+        makeCell(row, motor.power ? `${motor.power} kW` : "");
+        makeCell(row, motor.frameSize);
+        makeCell(row, [motor.statorVolt, motor.statorCurr].filter((value) => text(value) !== "").join(" V / ") + (motor.statorCurr !== "" && motor.statorCurr != null ? " A" : ""));
+        makeCell(row, [motor.rotorVolt, motor.rotorCurr].filter((value) => text(value) !== "").join(" V / ") + (motor.rotorCurr !== "" && motor.rotorCurr != null ? " A" : ""));
+        makeCell(row, motor.rpm);
+        makeCell(row, motor.runningOn);
+        const spareCell = document.createElement("td");
+        const badge = document.createElement("span");
+        const availability = text(motor.sparesAvail);
+        badge.className = `badge ${availability === "Yes" ? "badge-yes" : availability === "No" ? "badge-no" : "badge-unknown"}`;
+        badge.textContent = availability || "Unknown";
+        spareCell.appendChild(badge);
+        row.appendChild(spareCell);
+        const remarksCell = makeCell(row, motor.remarks);
+        remarksCell.title = text(motor.remarks);
+        makeCell(row, motor.condition);
+        const actionCell = document.createElement("td");
+        const actionGroup = document.createElement("div");
+        actionGroup.className = "row-actions";
+        const editButton = document.createElement("button");
+        editButton.className = "icon-button";
+        editButton.type = "button";
+        editButton.title = "Edit motor";
+        editButton.setAttribute("aria-label", `Edit ${text(motor.equipmentTag)}`);
+        editButton.textContent = "✎";
+        editButton.addEventListener("click", () => openForm(motors.indexOf(motor)));
+        const deleteButton = document.createElement("button");
+        deleteButton.className = "icon-button delete";
+        deleteButton.type = "button";
+        deleteButton.title = "Delete motor";
+        deleteButton.setAttribute("aria-label", `Delete ${text(motor.equipmentTag)}`);
+        deleteButton.textContent = "×";
+        deleteButton.addEventListener("click", () => deleteMotor(motors.indexOf(motor)));
+        actionGroup.append(editButton, deleteButton);
+        actionCell.appendChild(actionGroup);
+        row.appendChild(actionCell);
+        elements.rows.appendChild(row);
+      }
+
+      elements.empty.hidden = filtered.length > 0;
+      document.getElementById("record-count").textContent = String(filtered.length);
+      updateSummary();
+    }
+
+    function updateSummary() {
+      document.getElementById("stat-total").textContent = String(motors.length);
+      document.getElementById("stat-plants").textContent = String(new Set(motors.map((motor) => motor.unit).filter(Boolean)).size);
+      document.getElementById("stat-available").textContent = String(motors.filter((motor) => motor.sparesAvail === "Yes").length);
+      document.getElementById("stat-unavailable").textContent = String(motors.filter((motor) => motor.sparesAvail === "No").length);
+      const current = elements.plant.value;
+      const plants = [...new Set(motors.map((motor) => motor.unit).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+      elements.plant.replaceChildren(new Option("All plants", ""));
+      for (const plant of plants) elements.plant.add(new Option(plant, plant));
+      elements.plant.value = plants.includes(current) ? current : "";
+    }
+
+    function openForm(index = -1) {
+      elements.form.reset();
+      document.getElementById("form-notice").textContent = "";
+      document.getElementById("motor-id").value = index < 0 ? "" : String(index);
+      document.getElementById("dialog-title").textContent = index < 0 ? "Add motor" : "Edit motor";
+      if (index >= 0) {
+        for (const field of fields) {
+          const input = elements.form.elements.namedItem(field);
+          if (input) input.value = text(motors[index][field]);
+        }
+      }
+      elements.dialog.showModal();
+      document.getElementById("unit").focus();
+    }
+
+    function closeForm() {
+      elements.dialog.close();
+    }
+
+    function deleteMotor(index) {
+      const motor = motors[index];
+      if (!motor || !confirm(`Delete motor ${text(motor.equipmentTag)} from ${text(motor.unit)}?`)) return;
+      motors.splice(index, 1);
+      persist();
+      render();
+    }
+
+    function valueFromForm(form, key) {
+      const raw = text(form.elements.namedItem(key).value).trim();
+      if (["power", "statorVolt", "statorCurr", "rotorVolt", "rotorCurr", "rpm"].includes(key)) {
+        return raw === "" ? "" : Number(raw);
+      }
+      return raw;
+    }
+
+    elements.form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const formData = Object.fromEntries(fields.map((field) => [field, valueFromForm(elements.form, field)]));
+      const editIndex = document.getElementById("motor-id").value;
+      if (editIndex === "") motors.push(formData);
+      else motors[Number(editIndex)] = formData;
+      persist();
+      render();
+      closeForm();
+    });
+
+    function normalizedHeader(value) {
+      return text(value).replace(/[\r\n]+/g, " ").replace(/\s+/g, " ").trim().toLocaleLowerCase();
+    }
+
+    function importRecord(row, unitFallback) {
+      const headers = Object.keys(row);
+      const find = (...needles) => {
+        const header = headers.find((candidate) => needles.some((needle) => normalizedHeader(candidate).includes(needle)));
+        return header === undefined ? "" : row[header];
+      };
+      const clean = (value) => value === null || value === undefined ? "" : String(value).trim();
+      const numeric = (value) => {
+        if (value === null || value === undefined || String(value).trim() === "") return "";
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : clean(value);
+      };
+      const unit = clean(find("unit")) || unitFallback;
+      const availabilityHeader = headers.find((header) => normalizedHeader(header).includes("spares availability"));
+      const availability = availabilityHeader ? clean(row[availabilityHeader]) : "";
+      return {
+        unit,
+        lineNo: clean(find("line no")),
+        section: clean(find("section")),
+        equipmentTag: clean(find("equipment tag")),
+        equipmentDesc: clean(find("equipment description")),
+        make: clean(find("make")),
+        type: clean(find("slipring / squirrel cage", "type")),
+        power: numeric(find("power in kw")),
+        frameSize: clean(find("frame size")),
+        statorVolt: numeric(find("stator voltage")),
+        statorCurr: numeric(find("stator current")),
+        rotorVolt: numeric(find("rotor voltage")),
+        rotorCurr: numeric(find("rotor current")),
+        rpm: numeric(find("motor rpm")),
+        mounting: clean(find("mounting")),
+        runningOn: clean(find("running on")),
+        sparesAvail: availability,
+        remarks: clean(find("remarks")),
+        condition: clean(find("condition of spare motor"))
+      };
+    }
+
+    async function importWorkbook(file) {
+      if (!window.XLSX) throw new Error("Excel support did not load. Check your internet connection and refresh the page.");
+      const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
+      const imported = [];
+      for (const expectedName of ["DALLA", "Sidhi"]) {
+        const actualName = workbook.SheetNames.find((name) => name.toLocaleLowerCase() === expectedName.toLocaleLowerCase());
+        if (!actualName) throw new Error(`The workbook is missing the "${expectedName}" sheet.`);
+        const rows = XLSX.utils.sheet_to_json(workbook.Sheets[actualName], { range: 1, defval: "", raw: false });
+        for (const row of rows) {
+          const motor = importRecord(row, expectedName === "DALLA" ? "Dalla" : "Sidhi");
+          if (motor.equipmentTag || motor.equipmentDesc) imported.push(motor);
+        }
+      }
+      if (imported.length === 0) throw new Error("No motor records were found in the DALLA or Sidhi sheets.");
+      if (!confirm(`Import ${imported.length} motor records and replace the current browser data? Export your current data first if you want a backup.`)) return;
+      motors = imported;
+      persist();
+      render();
+      alert(`Imported ${imported.length} motor records.`);
+    }
+
+    function exportWorkbook() {
+      if (!window.XLSX) {
+        alert("Excel export support did not load. Check your internet connection and refresh the page.");
+        return;
+      }
+      const exportRows = motors.map((motor, index) => ({
+        "Sl. No.": index + 1,
+        "Unit": motor.unit,
+        "Line No": motor.lineNo,
+        "Section": motor.section,
+        "Equipment Tag": motor.equipmentTag,
+        "Equipment Description": motor.equipmentDesc,
+        "Make": motor.make,
+        "Type": motor.type,
+        "Power in KW": motor.power,
+        "Frame size": motor.frameSize,
+        "Stator Voltage": motor.statorVolt,
+        "Stator current": motor.statorCurr,
+        "Rotor Voltage": motor.rotorVolt,
+        "Rotor Current": motor.rotorCurr,
+        "Motor RPM": motor.rpm,
+        "Mounting": motor.mounting,
+        "Running on": motor.runningOn,
+        "Spares Availability": motor.sparesAvail,
+        "Remarks": motor.remarks,
+        "Condition of Spare Motor": motor.condition
+      }));
+      const sheet = XLSX.utils.json_to_sheet(exportRows);
+      sheet["!cols"] = Object.keys(exportRows[0] || {}).map((key) => ({ wch: Math.max(key.length, 14) }));
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, sheet, "HT Motors");
+      XLSX.writeFile(workbook, "ht-motor-directory.xlsx");
+    }
+
+    elements.search.addEventListener("input", render);
+    elements.plant.addEventListener("change", render);
+    elements.availability.addEventListener("change", render);
+    document.getElementById("add-button").addEventListener("click", () => openForm());
+    document.getElementById("close-dialog").addEventListener("click", closeForm);
+    document.getElementById("cancel-dialog").addEventListener("click", closeForm);
+    document.getElementById("import-button").addEventListener("click", () => elements.file.click());
+    document.getElementById("export-button").addEventListener("click", exportWorkbook);
+    elements.file.addEventListener("change", async () => {
+      const file = elements.file.files && elements.file.files[0];
+      if (!file) return;
+      try {
+        await importWorkbook(file);
+      } catch (error) {
+        console.error("Workbook import failed:", error);
+        alert(`Could not import workbook: ${error.message}`);
+      } finally {
+        elements.file.value = "";
+      }
+    });
+    elements.dialog.addEventListener("click", (event) => {
+      if (event.target === elements.dialog) closeForm();
+    });
+
+    render();
+  </script>
+</body>
+</html>
