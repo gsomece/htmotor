@@ -33,7 +33,7 @@
     h1 { margin: 0; font-size: 20px; letter-spacing: -.02em; }
     .brand p { margin: 5px 0 0; color: #bdcbd4; font-size: 13px; }
     .actions { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; justify-content: flex-end; }
-    .button { display: inline-flex; align-items: center; justify-content: center; min-height: 39px; padding: 9px 13px; border: 1px solid transparent; border-radius: 8px; background: white; color: var(--ink); }
+    .button { display: inline-flex; align-items: center; justify-content: center; min-height: 39px; padding: 9px 13px; border: 1px solid transparent; border-radius: 8px; background: white; color: var(--ink); text-decoration: none; transition: transform 0.12s ease, opacity 0.12s ease; }
     .button:hover { transform: translateY(-1px); }
     .button-primary { background: var(--orange); color: white; }
     .button-primary:hover { background: #d95f12; }
@@ -145,7 +145,7 @@
         <h2>Motor inventory</h2>
         <p>Search, review and manage critical high-tension motor spares across plants.</p>
       </div>
-      <span class="saved-note" id="saved-note">Changes are saved in this browser</span>
+      <span class="saved-note" id="saved-note">Public sync is being configured</span>
     </section>
 
     <section class="stats" aria-label="Inventory summary">
@@ -198,7 +198,7 @@
     </section>
   </main>
 
-  <footer>HT Motor Directory · Data stays in this browser unless you export it.</footer>
+  <footer>HT Motor Directory · Data is shared publicly when the Firebase database is configured.</footer>
 
   <dialog id="motor-dialog">
     <div class="dialog-head">
@@ -261,19 +261,10 @@
     ];
 
     const sampleMotors = [
-      { unit:"Dalla", lineNo:"Line2", section:"Coal Mill", equipmentTag:"L42MD1", equipmentDesc:"Coal Mill MD", make:"BHEL", type:"Slipring", power:500, frameSize:"1LS7630", statorVolt:6600, statorCurr:64, rotorVolt:1100, rotorCurr:430, rpm:740, mounting:"Horizontal", runningOn:"Coal Mill 2A", sparesAvail:"Yes", remarks:"Stored at store", condition:"Good" },
-      { unit:"Dalla", lineNo:"Line2", section:"Kiln", equipmentTag:"422FN2", equipmentDesc:"Bag House Fan", make:"BHEL", type:"Slipring", power:1200, frameSize:"1LS7806", statorVolt:6600, statorCurr:144, rotorVolt:1100, rotorCurr:760, rpm:990, mounting:"Horizontal", runningOn:"Kiln exhauster", sparesAvail:"No", remarks:"Awaiting inspection", condition:"Fair" },
-      { unit:"Dalla", lineNo:"Line2", section:"Kiln", equipmentTag:"442FN1", equipmentDesc:"PH Fan", make:"BHEL", type:"Slipring", power:2300, frameSize:"1RR7716", statorVolt:6600, statorCurr:236, rotorVolt:1100, rotorCurr:1320, rpm:745, mounting:"Horizontal", runningOn:"Kiln PH fan", sparesAvail:"Yes", remarks:"Ready for use", condition:"Good" },
-      { unit:"Dalla", lineNo:"Line1", section:"Kiln", equipmentTag:"441FN1", equipmentDesc:"PH Fan", make:"CGL", type:"Slipring", power:1950, frameSize:"560", statorVolt:6600, statorCurr:217, rotorVolt:1100, rotorCurr:1170, rpm:745, mounting:"Horizontal", runningOn:"Kiln PH fan", sparesAvail:"No", remarks:"Rewinding required", condition:"Poor" },
-      { unit:"Dalla", lineNo:"Line1", section:"Coal Mill", equipmentTag:"L41BM1", equipmentDesc:"Coal Mill MD", make:"BHEL", type:"Slipring", power:430, frameSize:"BW12176H6A", statorVolt:6600, statorCurr:52, rotorVolt:1100, rotorCurr:390, rpm:740, mounting:"Horizontal", runningOn:"Coal Mill 1A", sparesAvail:"Yes", remarks:"Store stock", condition:"Good" },
-      { unit:"Dalla", lineNo:"Line2", section:"Raw Mill", equipmentTag:"362FN1", equipmentDesc:"VRM Fan", make:"BHEL", type:"Slipring", power:3700, frameSize:"1RU7718", statorVolt:6600, statorCurr:349, rotorVolt:1100, rotorCurr:2050, rpm:745, mounting:"Vertical", runningOn:"Raw mill fan", sparesAvail:"Yes", remarks:"On standby", condition:"Good" },
-      { unit:"Dalla", lineNo:"Line2", section:"Raw Mill", equipmentTag:"362MD1", equipmentDesc:"VRM MD", make:"BHEL", type:"Slipring", power:3300, frameSize:"1RU7718", statorVolt:6600, statorCurr:315, rotorVolt:1100, rotorCurr:1860, rpm:745, mounting:"Vertical", runningOn:"Raw mill drive", sparesAvail:"No", remarks:"Rotor unavailable", condition:"Fair" },
-      { unit:"Dalla", lineNo:"Line1", section:"Raw Mill", equipmentTag:"344MD2", equipmentDesc:"RP MD", make:"BHEL", type:"Slipring", power:1000, frameSize:"1RB756334", statorVolt:6600, statorCurr:107, rotorVolt:1100, rotorCurr:650, rpm:740, mounting:"Horizontal", runningOn:"RP mill drive", sparesAvail:"Yes", remarks:"Stored in shed", condition:"Good" },
-      { unit:"Dalla", lineNo:"Line1", section:"Raw Mill", equipmentTag:"344MD1", equipmentDesc:"RP MD", make:"BHEL", type:"Slipring", power:1000, frameSize:"1RB756334", statorVolt:6600, statorCurr:107, rotorVolt:1100, rotorCurr:650, rpm:740, mounting:"Horizontal", runningOn:"RP mill drive", sparesAvail:"No", remarks:"Field use", condition:"Good" },
-      { unit:"Sidhi", lineNo:"Line-1", section:"Rawmill", equipmentTag:"361MD1", equipmentDesc:"Raw Mill Main Drive", make:"BHEL", type:"Slipring", power:3300, frameSize:"IRU7718-6", statorVolt:6600, statorCurr:320, rotorVolt:1100, rotorCurr:1880, rpm:745, mounting:"Vertical", runningOn:"Rawmill", sparesAvail:"Yes", remarks:"Available", condition:"Good" },
-      { unit:"Sidhi", lineNo:"Line-1", section:"Rawmill", equipmentTag:"361 FN1", equipmentDesc:"Raw Mill Fan", make:"BHEL", type:"Slipring", power:3600, frameSize:"IRU7718-6", statorVolt:6600, statorCurr:330, rotorVolt:1100, rotorCurr:1920, rpm:745, mounting:"Vertical", runningOn:"Rawmill fan", sparesAvail:"No", remarks:"Need inspection", condition:"Fair" },
-      { unit:"Sidhi", lineNo:"Line-1", section:"Coal Mill", equipmentTag:"L41MD1", equipmentDesc:"Coal Mill Main drive", make:"BHEL", type:"Slipring", power:500, frameSize:"ILS7630-4", statorVolt:6600, statorCurr:60, rotorVolt:1100, rotorCurr:430, rpm:740, mounting:"Horizontal", runningOn:"Coal mill", sparesAvail:"Yes", remarks:"New spare", condition:"Excellent" },
-      { unit:"Sidhi", lineNo:"Line-1", section:"Coal Mill", equipmentTag:"L41 FN2", equipmentDesc:"Coal Mill Fan", make:"ABB", type:"Squirrel Cage", power:500, frameSize:"AMA400L6ABAFi", statorVolt:6600, statorCurr:56, rotorVolt:0, rotorCurr:0, rpm:990, mounting:"Horizontal", runningOn:"Coal mill fan", sparesAvail:"No", remarks:"Awaiting vendor", condition:"Fair" }
+      { unit:"Dalla", lineNo:"Line2", section:"Coal Mill", equipmentTag:"L42MD1", equipmentDesc:"Coal Mill MD", make:"BHEL", type:"Slipring", power:500, frameSize:"1LS7630", statorVolt:6600, statorCurr:64, rotorVolt:900, rotorCurr:170, rpm:990, mounting:"Horizontal", runningOn:"Coal Mill", sparesAvail:"Yes", remarks:"Alternate spare in plant", condition:"Good" },
+      { unit:"Dalla", lineNo:"Line2", section:"Kiln", equipmentTag:"422FN2", equipmentDesc:"Bag House Fan", make:"BHEL", type:"Slipring", power:1200, frameSize:"1LS7806", statorVolt:6600, statorCurr:124, rotorVolt:960, rotorCurr:255, rpm:990, mounting:"Horizontal", runningOn:"Kiln", sparesAvail:"No", remarks:"Rotor under inspection", condition:"Repair" },
+      { unit:"Dalla", lineNo:"Line2", section:"Kiln", equipmentTag:"442FN1", equipmentDesc:"PH Fan", make:"BHEL", type:"Slipring", power:2300, frameSize:"1RR7716", statorVolt:6600, statorCurr:236, rotorVolt:980, rotorCurr:415, rpm:990, mounting:"Horizontal", runningOn:"Kiln", sparesAvail:"Yes", remarks:"Spare rotor available", condition:"OK" },
+      { unit:"Sidhi", lineNo:"Line-1", section:"Rawmill", equipmentTag:"361MD1", equipmentDesc:"Raw Mill Main Drive", make:"BHEL", type:"Slipring", power:3300, frameSize:"IRU7718-6", statorVolt:6600, statorCurr:332, rotorVolt:1080, rotorCurr:625, rpm:995, mounting:"Vertical", runningOn:"Raw Mill", sparesAvail:"Yes", remarks:"First choice spare", condition:"Good" }
     ];
 
     let motors = loadMotors();
@@ -293,12 +284,13 @@
 
     function isFirebaseConfigured() {
       return !!(
-        firebase &&
+        window.firebase &&
         firebase.apps &&
-        firebase.apps.length > 0 &&
         firebaseConfig &&
         firebaseConfig.apiKey &&
         firebaseConfig.apiKey !== "YOUR_API_KEY" &&
+        firebaseConfig.databaseURL &&
+        firebaseConfig.databaseURL !== "https://YOUR_PROJECT-default-rtdb.firebaseio.com" &&
         firebaseConfig.projectId &&
         firebaseConfig.projectId !== "YOUR_PROJECT"
       );
@@ -307,6 +299,10 @@
     function initializeSharedStorage() {
       if (!window.firebase || !isFirebaseConfigured()) {
         sharedSyncEnabled = false;
+        const savedNote = document.getElementById("saved-note");
+        if (savedNote) {
+          savedNote.textContent = "Public sync is not configured yet. Add Firebase values to share data publicly.";
+        }
         return;
       }
 
@@ -352,12 +348,19 @@
     function persist() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(motors));
-        document.getElementById("saved-note").textContent = "Changes are saved in this browser";
+        const savedNote = document.getElementById("saved-note");
+        if (savedNote) {
+          savedNote.textContent = sharedSyncEnabled && sharedDatabase
+            ? "Changes are saved to the shared/public database"
+            : "Changes are saved in this browser";
+        }
 
         if (sharedSyncEnabled && sharedDatabase) {
           sharedDatabase.ref(SHARED_DB_PATH).set(motors).catch((error) => {
             console.error("Unable to sync shared motor data:", error);
-            document.getElementById("saved-note").textContent = "Saved locally; cloud sync failed";
+            if (savedNote) {
+              savedNote.textContent = "Saved locally; cloud sync failed";
+            }
           });
         }
       } catch (error) {
