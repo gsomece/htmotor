@@ -1,0 +1,88 @@
+import argparse
+import re
+from pathlib import Path
+
+import pandas as pd
+
+
+DEFAULT_WORKBOOK = "EI_Critical Spare HT Motors DALLA.xlsx"
+SHEETS = ("DALLA", "Sidhi")
+
+
+def clean_column_name(value: object) -> str:
+    return re.sub(r"\s+", " ", str(value).replace("\n", " ").replace("\r", " ")).strip()
+
+
+def standardize_column_name(value: object) -> str:
+    name = clean_column_name(value)
+    normalized = name.casefold()
+
+    if normalized == "sl. no.":
+        return "Sl No"
+    if normalized.startswith("type "):
+        return "Type"
+    if normalized.startswith("running on "):
+        return "Running on"
+    if normalized.startswith("spares availability"):
+        return "Spares Availability"
+    if normalized == "section":
+        return "Section"
+    if normalized == "stator current":
+        return "Stator Current"
+    if normalized == "rotor current":
+        return "Rotor Current"
+    return name
+
+
+def clean_sheet(workbook: Path, sheet_name: str) -> pd.DataFrame:
+    frame = pd.read_excel(workbook, sheet_name=sheet_name, header=1)
+    frame = frame.dropna(axis=1, how="all")
+    frame = frame.loc[
+        :, ~frame.columns.astype(str).str.strip().str.startswith("Unnamed")
+    ]
+    frame = frame.dropna(how="all").reset_index(drop=True)
+    frame.columns = [standardize_column_name(column) for column in frame.columns]
+
+    duplicate_columns = frame.columns[frame.columns.duplicated()].tolist()
+    if duplicate_columns:
+        duplicates = ", ".join(sorted(set(duplicate_columns)))
+        raise ValueError(
+            f"Sheet '{sheet_name}' has duplicate columns after cleanup: {duplicates}"
+        )
+
+    return frame
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Clean the DALLA and Sidhi sheets and export them as CSV files."
+    )
+    parser.add_argument(
+        "workbook",
+        nargs="?",
+        type=Path,
+        default=Path(__file__).with_name(DEFAULT_WORKBOOK),
+        help=f"Input Excel workbook (default: {DEFAULT_WORKBOOK} beside this script)",
+    )
+    args = parser.parse_args()
+    workbook = args.workbook
+
+    if not workbook.is_file():
+        parser.error(f"Workbook not found: {workbook}")
+
+    available_sheets = pd.ExcelFile(workbook).sheet_names
+    missing_sheets = [sheet for sheet in SHEETS if sheet not in available_sheets]
+    if missing_sheets:
+        raise ValueError(
+            f"Workbook is missing required sheet(s): {', '.join(missing_sheets)}"
+        )
+
+    for sheet_name in SHEETS:
+        frame = clean_sheet(workbook, sheet_name)
+        output_path = workbook.parent / f"{sheet_name}_clean.csv"
+        frame.to_csv(output_path, index=False, encoding="utf-8-sig")
+        print(f"Wrote {len(frame)} rows to {output_path}")
+
+
+if __name__ == "__main__":
+    main()
